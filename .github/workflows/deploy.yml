@@ -17,9 +17,9 @@ env:
   ECS_TASK_DEFINITION_FRONTEND: .aws/frontend-task-def.json # set this to the path to your Amazon ECS task definition
   ECS_TASK_DEFINITION_BACKEND: .aws/backend-task-def.json
   ECS_TASK_DEFINITION_PAGOS: .aws/pagos-task-def.json
-  CONTAINER_NAME_FRONTEND: frontend-container
-  CONTAINER_NAME_BACKEND: backend-container
-  CONTAINER_NAME_PAGOS: pagos-container
+  CONTAINER_NAME_FRONTEND: frontend
+  CONTAINER_NAME_BACKEND: backend
+  CONTAINER_NAME_PAGOS: pagos
 
 jobs:
   deploy:
