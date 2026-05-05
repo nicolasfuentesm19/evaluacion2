@@ -1,0 +1,20 @@
+<nav class="navbar glass-panel">
+  <div class="container nav-content">
+    <a routerLink="/" class="logo">E-Commerce</a>
+    <div class="nav-links">
+      <a routerLink="/cart" class="cart-link">
+        Carrito
+        <span class="cart-badge" *ngIf="cart$ | async as cart">
+          {{cart.items.length}}
+        </span>
+      </a>
+      
+      <ng-container *ngIf="isAuthenticated$ | async; else unauth">
+        <button class="btn btn-danger btn-sm" (click)="logout()">Salir</button>
+      </ng-container>
+      <ng-template #unauth>
+        <a routerLink="/login" class="btn btn-primary btn-sm">Ingresar</a>
+      </ng-template>
+    </div>
+  </div>
+</nav>

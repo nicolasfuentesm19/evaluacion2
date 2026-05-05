@@ -1,0 +1,56 @@
+<div class="container cart-container">
+  <h2 style="margin: 2rem 0;">Tu Carrito de Compra</h2>
+
+  <div *ngIf="paymentSuccess" class="glass-panel success-panel">
+    <h3>¡Compra Exitosa!</h3>
+    <p>Tu orden ha sido procesada correctamente a través de nuestro microservicio de pagos.</p>
+    <a routerLink="/" class="btn btn-primary" style="margin-top: 1rem;">Volver al catálogo</a>
+  </div>
+
+  <ng-container *ngIf="!paymentSuccess">
+    <ng-container *ngIf="cart$ | async as cart; else loading">
+      
+      <div *ngIf="cart.items.length === 0" class="glass-panel empty-cart">
+        <p>Tu carrito está vacío.</p>
+        <a routerLink="/" class="btn btn-primary" style="margin-top: 1rem;">Explorar productos</a>
+      </div>
+
+      <div *ngIf="cart.items.length > 0" class="cart-layout">
+        <div class="cart-items">
+          <div class="cart-item glass-panel" *ngFor="let item of cart.items">
+            <img [src]="item.product.image_url" [alt]="item.product.title" class="item-img">
+            <div class="item-details">
+              <h4>{{ item.product.title }}</h4>
+              <p>Cantidad: {{ item.quantity }}</p>
+              <p class="item-price">${{ item.product.price | number:'1.2-2' }}</p>
+            </div>
+            <button class="btn btn-danger btn-sm" (click)="removeItem(item.product.id)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="cart-summary glass-panel">
+          <h3>Resumen de Orden</h3>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span>${{ getTotal(cart) | number:'1.2-2' }}</span>
+          </div>
+          <hr class="divider">
+          <div class="summary-row total">
+            <span>Total</span>
+            <span>${{ getTotal(cart) | number:'1.2-2' }}</span>
+          </div>
+          
+          <button class="btn btn-primary checkout-btn" 
+                  [disabled]="isProcessing" 
+                  (click)="checkout()">
+            {{ isProcessing ? 'Procesando Pago...' : 'Pagar Ahora' }}
+          </button>
+        </div>
+      </div>
+
+    </ng-container>
+    <ng-template #loading>
+      <div class="loading">Cargando carrito...</div>
+    </ng-template>
+  </ng-container>
+</div>
