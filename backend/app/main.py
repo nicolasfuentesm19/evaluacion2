@@ -69,9 +69,9 @@ def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(databas
     # Auto-populate some products if empty for demo purposes
     if not products:
         demo_products = [
-            models.Product(title="Laptop Pro", description="High end laptop", price=1200.0, image_url="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400"),
-            models.Product(title="Smartphone X", description="Latest smartphone", price=800.0, image_url="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=400"),
-            models.Product(title="Wireless Headphones", description="Noise cancelling", price=250.0, image_url="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400")
+            models.Product(title="Laptop Pro", description="Computadora portátil de alta gama", price=1200.0, image_url="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400"),
+            models.Product(title="Smartphone X", description="Teléfono inteligente de última generación", price=800.0, image_url="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=400"),
+            models.Product(title="Audífonos Inalámbricos", description="Cancelación de ruido activa", price=250.0, image_url="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400")
         ]
         db.add_all(demo_products)
         db.commit()

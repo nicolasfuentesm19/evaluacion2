@@ -1,42 +1,58 @@
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: 2.5rem;
   margin-bottom: 4rem;
 }
 
 .product-card {
   padding: 0;
   overflow: hidden;
-  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  transition: all var(--transition-speed) var(--transition-bounce);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px var(--card-glow);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .image-container {
-  height: 200px;
+  height: 220px;
   overflow: hidden;
   position: relative;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .image-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-speed);
+  transition: transform 0.5s ease;
 }
 
 .product-card:hover .image-container img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .product-info {
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -44,15 +60,22 @@
 
 .product-info h3 {
   margin-bottom: 0.5rem;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .description {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
   margin-bottom: 1.5rem;
   flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .price-action {
@@ -60,10 +83,13 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .price {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   color: var(--accent-color);
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
 }
