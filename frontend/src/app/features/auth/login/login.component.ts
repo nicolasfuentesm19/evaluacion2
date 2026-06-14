@@ -24,7 +24,7 @@ export class LoginComponent {
   onSubmit() {
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: () => this.router.navigate(['/']),
-      error: () => this.error = 'Credenciales inválidas'
+      error: (err) => this.error = err.error?.detail || 'Credenciales inválidas'
     });
   }
 }

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.crud import pago as crud_pago
 from app.database import get_db
+import httpx
 from app.schemas.pago import (
     PagoCancelarResponse,
     PagoCreate,
@@ -134,6 +135,7 @@ def crear_pago_checkout(payload: PagoCreateCheckoutRequest, db: Session = Depend
     }
 
     preference_response = sdk.preference().create(preference_data)
+    logger.info(f"[pagos] MercadoPago preference response: {preference_response}")
     body = preference_response.get("response", {})
     init_point = body.get("init_point")
     preference_id = body.get("id")
@@ -316,17 +318,64 @@ async def recibir_webhook(
         operacion_id, operacion = _buscar_operacion_por_external_reference(external_reference)
         if operacion:
             _actualizar_operacion(operacion_id, nuevo_estado)
+            
+            pago_aprobado = False
+            email_notificacion = "nicolasfuentesm19@gmail.com"
+            monto_notificacion = 0.0
+            descripcion_notificacion = "Pago en E-Commerce"
+            
             with OPERACIONES_LOCK:
                 if nuevo_estado == "PAGADO":
                     operacion = OPERACIONES_PAGO[operacion_id]
                     operacion["mp_payment_id"] = payment.get("id")
                     _guardar_pago_si_aprobado(db, operacion)
+                    pago_aprobado = True
+                    email_notificacion = operacion.get("email", "nicolasfuentesm19@gmail.com")
+                    monto_notificacion = operacion.get("monto", 0.0)
+                    descripcion_notificacion = operacion.get("descripcion", "Pago en E-Commerce")
+            
+            if pago_aprobado:
+                try:
+                    NOTIFICACIONES_URL = os.getenv("NOTIFICACIONES_URL", "http://notificaciones:8003")
+                    async with httpx.AsyncClient() as client:
+                        await client.post(
+                            f"{NOTIFICACIONES_URL}/email/payment",
+                            json={
+                                "email": email_notificacion,
+                                "transaction_id": str(payment.get("id")),
+                                "status": nuevo_estado,
+                                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "amount": float(monto_notificacion),
+                                "summary": descripcion_notificacion
+                            }
+                        )
+                except Exception as e:
+                    logger.error(f"Error enviando notificacion de pago: {e}")
+
             return WebhookAckResponse(success=True, message="Webhook procesado")
 
         db_pago = crud_pago.get_pago_by_external_reference(db, external_reference)
         if db_pago and db_pago.estado_pago != nuevo_estado:
             crud_pago.update_estado_pago(db, pago_id=db_pago.id_pago, estado=nuevo_estado)
             crud_pago.update_codigo_transaccion(db, pago_id=db_pago.id_pago, codigo=str(payment.get("id")))
+
+            if nuevo_estado == "PAGADO":
+                try:
+                    NOTIFICACIONES_URL = os.getenv("NOTIFICACIONES_URL", "http://notificaciones:8003")
+                    async with httpx.AsyncClient() as client:
+                        await client.post(
+                            f"{NOTIFICACIONES_URL}/email/payment",
+                            json={
+                                "email": "nicolasfuentesm19@gmail.com",
+                                "transaction_id": str(payment.get("id")),
+                                "status": nuevo_estado,
+                                "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "amount": float(db_pago.monto_total),
+                                "summary": db_pago.observacion or "Pago en E-Commerce"
+                            }
+                        )
+                except Exception as e:
+                    logger.error(f"Error enviando notificacion de pago: {e}")
 
     return WebhookAckResponse(success=True, message="Webhook procesado")
 
@@ -393,3 +442,4 @@ def delete_pago(id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="Pago no encontrado")
     return None
+

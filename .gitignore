@@ -35,3 +35,6 @@ Thumbs.db
 # Env files (sensitive data)
 .env
 *.env
+
+# Local utilities
+ngrok.exe

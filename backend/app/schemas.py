@@ -10,8 +10,13 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_active: bool
+    is_verified: bool
     class Config:
         from_attributes = True
+
+class UserVerify(BaseModel):
+    email: str
+    code: str
 
 class Token(BaseModel):
     access_token: str
@@ -79,3 +84,19 @@ class PaymentIntent(BaseModel):
     amount: float
     description: str
     email: str
+
+class UserFile(BaseModel):
+    id: int
+    filename: str
+    s3_key: str
+    size_bytes: int
+    upload_date: str
+    
+    class Config:
+        from_attributes = True
+
+class SpaceResponse(BaseModel):
+    used_bytes: int
+    available_bytes: int
+    used_mb: float
+    available_mb: float

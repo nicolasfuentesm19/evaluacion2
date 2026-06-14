@@ -44,4 +44,8 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     this.isAuthenticatedSubject.next(false);
   }
+
+  verify(data: {email: string, code: string}) {
+    return this.http.post(`${this.api.baseUrl}/users/verify`, data);
+  }
 }

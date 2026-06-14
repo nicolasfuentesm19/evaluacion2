@@ -8,6 +8,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    verification_code = Column(String, nullable=True)
 
 class Product(Base):
     __tablename__ = "products"
@@ -42,3 +44,12 @@ class Order(Base):
     total_amount = Column(Float)
     status = Column(String, default="pending") # pending, paid, failed
     payment_id = Column(String, nullable=True)
+
+class UserFile(Base):
+    __tablename__ = "user_files"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    filename = Column(String)
+    s3_key = Column(String)
+    size_bytes = Column(Integer)
+    upload_date = Column(String)

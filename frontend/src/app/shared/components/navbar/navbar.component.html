@@ -10,6 +10,7 @@
       </a>
       
       <ng-container *ngIf="isAuthenticated$ | async; else unauth">
+        <a routerLink="/files" class="cart-link" style="margin-right: 15px;">Archivos S3</a>
         <button class="btn btn-danger btn-sm" (click)="logout()">Salir</button>
       </ng-container>
       <ng-template #unauth>

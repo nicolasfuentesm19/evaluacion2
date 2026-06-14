@@ -23,8 +23,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://ecommerce:password123@db:5432/ecommerce_db
+      - DATABASE_URL=${DATABASE_URL:-postgresql://ecommerce:password123@db:5432/ecommerce_db}
       - PAYMENT_SERVICE_URL=http://pagos:8002
+      - NOTIFICACIONES_URL=http://notificaciones:8003
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     depends_on:
       db:
         condition: service_healthy
@@ -37,11 +42,29 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - DATABASE_URL=postgresql://ecommerce:password123@db:5432/ecommerce_db
+      - DATABASE_URL=${DATABASE_URL:-postgresql://ecommerce:password123@db:5432/ecommerce_db}
       - MP_ACCESS_TOKEN=APP_USR-4795680976904507-050513-d428dd1b2f4fd762db76d5b2e9a55735-3379497295
+      - NOTIFICACIONES_URL=http://notificaciones:8003
+      - MP_SUCCESS_URL=${MP_SUCCESS_URL}
+      - MP_FAILURE_URL=${MP_FAILURE_URL}
+      - MP_PENDING_URL=${MP_PENDING_URL}
+      - MP_WEBHOOK_URL=${MP_WEBHOOK_URL}
     depends_on:
       db:
         condition: service_healthy
+
+  notificaciones:
+    build:
+      context: ./notificaciones
+    ports:
+      - "8003:8003"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - SES_SENDER_EMAIL=${SES_SENDER_EMAIL}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
 
   frontend:
     build:

@@ -3,8 +3,9 @@
     <h2 style="margin-bottom: 1.5rem; text-align: center;">Registro</h2>
     
     <div *ngIf="error" class="error-msg">{{ error }}</div>
+    <div *ngIf="success" style="color: var(--primary-color); margin-bottom: 1rem; font-size: 0.9rem;">{{ success }}</div>
 
-    <form (ngSubmit)="onSubmit()">
+    <form *ngIf="!isRegistered" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label>Email</label>
         <input type="email" class="form-control" [(ngModel)]="email" name="email" required>
@@ -20,6 +21,15 @@
       <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
         ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
       </p>
+    </form>
+
+    <form *ngIf="isRegistered" (ngSubmit)="onVerify()">
+      <div class="form-group">
+        <label>Código de Verificación</label>
+        <input type="text" class="form-control" [(ngModel)]="verificationCode" name="verificationCode" placeholder="Ingresa el código enviado a tu correo" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Verificar Cuenta</button>
     </form>
   </div>
 </div>

@@ -7,7 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.routers import pagos_router
-from app.database import get_db
+from app.database import get_db, Base, engine
+from app.models import pago
+
+Base.metadata.create_all(bind=engine)
 
 load_dotenv()
 

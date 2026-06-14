@@ -1,0 +1,46 @@
+<div class="dashboard-container">
+  <h2>Mi Almacenamiento S3</h2>
+
+  <div class="card" *ngIf="spaceInfo">
+    <h3>Espacio Utilizado</h3>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="(spaceInfo.used_mb / 2048) * 100"></div>
+    </div>
+    <p>{{ spaceInfo.used_mb }} MB de 2048 MB (2 GB)</p>
+    <p><strong>Disponible:</strong> {{ spaceInfo.available_mb }} MB</p>
+  </div>
+
+  <div class="card">
+    <h3>Subir Nuevo Archivo</h3>
+    <div *ngIf="error" class="error-msg" style="color: red; margin-bottom: 1rem;">{{ error }}</div>
+    <div *ngIf="success" style="color: green; margin-bottom: 1rem;">{{ success }}</div>
+    
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <input type="file" (change)="onFileSelected($event)" class="form-control">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label>Número de Teléfono (Opcional - Para recibir SMS)</label>
+      <input type="text" [(ngModel)]="phoneNumber" placeholder="+56912345678" class="form-control">
+      <small style="color: gray;">Añade el código de país (Ej: +569...)</small>
+    </div>
+
+    <button class="btn btn-primary" (click)="onUpload()" [disabled]="!selectedFile || isUploading">
+      {{ isUploading ? 'Subiendo...' : 'Subir a S3' }}
+    </button>
+  </div>
+
+  <div class="card">
+    <h3>Mis Archivos</h3>
+    <ul class="file-list">
+      <li *ngIf="files.length === 0">No has subido ningún archivo aún.</li>
+      <li *ngFor="let file of files">
+        <div>
+          <strong>{{ file.filename }}</strong>
+          <div style="font-size: 0.8rem; color: gray;">Subido el: {{ file.upload_date }}</div>
+        </div>
+        <div>{{ (file.size_bytes / 1024 / 1024) | number:'1.2-2' }} MB</div>
+      </li>
+    </ul>
+  </div>
+</div>
