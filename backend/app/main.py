@@ -202,11 +202,16 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
     
     # 2. Call Payment Microservice
     try:
+        # Use S3 Frontend URL for success redirection
+        # We'll use a relative path here to let the frontend know where it is deployed, or hardcode it since it's an academic project
+        success_url = "http://evaluacion2-archivos-app.s3-website-us-east-1.amazonaws.com/payment-success"
+        
         payment_payload = {
             "id_usuario": current_user.id,
             "descripcion": f"Order #{order.id}",
             "monto": float(total_amount),
-            "email_pagador": current_user.email
+            "email_pagador": current_user.email,
+            "success_url": success_url
         }
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{PAYMENT_SERVICE_URL}/pagos/crear", json=payment_payload)
@@ -214,7 +219,8 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
             payment_data = response.json()
             
             # The payment service will return data with init_point and preference_id
-            order.payment_id = str(payment_data.get("data", {}).get("id_pago"))
+            # Save the preference_id so we can look it up later when MP redirects the user back
+            order.payment_id = str(payment_data.get("data", {}).get("preference_id"))
             order.status = "processing"
             url_pago = payment_data.get("data", {}).get("url_pago")
             
@@ -227,25 +233,66 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
     db.commit()
     db.refresh(order)
     
-    # 3. Call Notificaciones for Purchase
-    try:
-        products_data = [{"title": item.product.title, "quantity": item.quantity, "price": item.product.price} for item in cart.items]
-        async with httpx.AsyncClient() as client:
-            await client.post(
-                f"{NOTIFICACIONES_URL}/email/purchase",
-                json={
-                    "email": current_user.email,
-                    "name": current_user.email.split("@")[0],
-                    "order_id": order.id,
-                    "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "products": products_data,
-                    "total": float(total_amount)
-                }
-            )
-    except Exception as e:
-        logging.error(f"Error sending purchase email: {e}")
-    
     return schemas.CheckoutResponse(order=order, url_pago=url_pago)
+
+class CheckoutConfirmRequest(BaseModel):
+    preference_id: str
+    collection_id: str
+    status: str
+
+@app.post("/checkout/confirm")
+async def checkout_confirm(
+    payload: CheckoutConfirmRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    # Find the order by preference_id (which we stored in payment_id)
+    order = db.query(models.Order).filter(
+        models.Order.user_id == current_user.id,
+        models.Order.payment_id == payload.preference_id
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found for this preference_id")
+        
+    if payload.status == "approved" and order.status != "paid":
+        order.status = "paid"
+        order.payment_id = payload.collection_id # Update to real transaction ID
+        db.commit()
+        db.refresh(order)
+        
+        # Now send the confirmation email containing the rubric details
+        # The email template in Notificaciones expects products, we can reconstruct or fetch them
+        # Wait, the order doesn't have an items relationship in this simple model, 
+        # so we'll just send a generic summary for now, or find the inactive cart.
+        cart = db.query(models.Cart).filter(
+            models.Cart.user_id == current_user.id, 
+            models.Cart.is_active == False
+        ).order_by(models.Cart.id.desc()).first()
+        
+        products_data = []
+        if cart and cart.items:
+            products_data = [{"title": item.product.title, "quantity": item.quantity, "price": item.product.price} for item in cart.items]
+        else:
+            products_data = [{"title": "Productos de E-Commerce", "quantity": 1, "price": order.total_amount}]
+
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(
+                    f"{NOTIFICACIONES_URL}/email/purchase",
+                    json={
+                        "email": current_user.email,
+                        "name": current_user.email.split("@")[0],
+                        "order_id": order.id,
+                        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "products": products_data,
+                        "total": float(order.total_amount)
+                    }
+                )
+        except Exception as e:
+            logging.error(f"Error sending purchase email: {e}")
+            
+    return {"message": "Order confirmed", "status": order.status}
 
 # --- File Management (S3) ---
 

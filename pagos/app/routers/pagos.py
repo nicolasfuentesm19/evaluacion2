@@ -129,7 +129,7 @@ def crear_pago_checkout(payload: PagoCreateCheckoutRequest, db: Session = Depend
         "items": [{"title": payload.descripcion, "quantity": 1, "currency_id": "CLP", "unit_price": float(payload.monto)}],
         "payer": {"email": payload.email_pagador},
         "external_reference": external_reference,
-        "back_urls": {"success": MP_SUCCESS_URL, "failure": MP_FAILURE_URL, "pending": MP_PENDING_URL},
+        "back_urls": {"success": payload.success_url or MP_SUCCESS_URL, "failure": MP_FAILURE_URL, "pending": MP_PENDING_URL},
         "auto_return": "approved",
         "notification_url": MP_WEBHOOK_URL,
     }

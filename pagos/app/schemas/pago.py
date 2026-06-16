@@ -51,6 +51,7 @@ class PagoCreateCheckoutRequest(BaseModel):
     descripcion: str
     monto: Decimal
     email_pagador: EmailStr = "usuario@email.cl"
+    success_url: Optional[str] = None
 
     @field_validator("descripcion")
     @classmethod
