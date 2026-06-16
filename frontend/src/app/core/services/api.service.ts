@@ -5,5 +5,5 @@ import { Injectable } from '@angular/core';
 })
 export class ApiService {
   // En producción esto debería venir de environments
-  public readonly baseUrl = 'http://98.88.76.33:8000';
+  public readonly baseUrl = 'http://18.205.191.199:8000';
 }
