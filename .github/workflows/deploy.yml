@@ -58,9 +58,9 @@ jobs:
     # 2. BACKEND & PAGOS -> Amazon ECS (Fargate)
     # COMENTADO TEMPORALMENTE PARA EVITAR CAMBIO DE IP PÚBLICA
     # ==========================================
-    # - name: Login to Amazon ECR
-    #   id: login-ecr
-    #   uses: aws-actions/amazon-ecr-login@v1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
     # - name: Build, tag, and push Backend to ECR
     #   id: build-image-backend
