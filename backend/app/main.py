@@ -205,7 +205,7 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
     try:
         # Use S3 Frontend URL for success redirection
         # We'll use a relative path here to let the frontend know where it is deployed, or hardcode it since it's an academic project
-        success_url = "http://evaluacion2-archivos-app.s3-website-us-east-1.amazonaws.com/payment-success"
+        success_url = "https://evaluacion2-archivos-app.s3.amazonaws.com/index.html"
         
         payment_payload = {
             "id_usuario": current_user.id,
