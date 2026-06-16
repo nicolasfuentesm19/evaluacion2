@@ -81,24 +81,24 @@ jobs:
         docker push $ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Fill ECS task definition (Backend)
-      id: task-def-backend
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION_BACKEND }}
-        container-name: ${{ env.CONTAINER_NAME_BACKEND }}
-        image: ${{ steps.build-image-backend.outputs.image }}
-        environment-variables: |
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    # - name: Fill ECS task definition (Backend)
+    #   id: task-def-backend
+    #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #   with:
+    #     task-definition: ${{ env.ECS_TASK_DEFINITION_BACKEND }}
+    #     container-name: ${{ env.CONTAINER_NAME_BACKEND }}
+    #     image: ${{ steps.build-image-backend.outputs.image }}
+    #     environment-variables: |
+    #       AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+    #       AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-    - name: Deploy ECS task definition (Backend)
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def-backend.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE_BACKEND }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+    # - name: Deploy ECS task definition (Backend)
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    #   with:
+    #     task-definition: ${{ steps.task-def-backend.outputs.task-definition }}
+    #     service: ${{ env.ECS_SERVICE_BACKEND }}
+    #     cluster: ${{ env.ECS_CLUSTER }}
+    #     wait-for-service-stability: true
 
     # - name: Fill ECS task definition (Pagos)
     #   id: task-def-pagos
