@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 import httpx
 
+from pydantic import BaseModel
 from . import models, schemas, database, auth
 
 models.Base.metadata.create_all(bind=database.engine)
