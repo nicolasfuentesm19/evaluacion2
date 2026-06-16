@@ -4,6 +4,6 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class ApiService {
-  // En producción esto debería venir de environments
-  public readonly baseUrl = 'http://18.205.191.199:8000';
+  public baseUrl: string = 'http://54.208.151.87:8000'; // IP pública inyectada tras reiniciar Fargate
+  constructor() { }
 }
