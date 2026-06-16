@@ -56,62 +56,63 @@ jobs:
 
     # ==========================================
     # 2. BACKEND & PAGOS -> Amazon ECS (Fargate)
+    # COMENTADO TEMPORALMENTE PARA EVITAR CAMBIO DE IP PÚBLICA
     # ==========================================
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+    # - name: Login to Amazon ECR
+    #   id: login-ecr
+    #   uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push Backend to ECR
-      id: build-image-backend
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG ./backend
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG" >> $GITHUB_OUTPUT
+    # - name: Build, tag, and push Backend to ECR
+    #   id: build-image-backend
+    #   env:
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #     IMAGE_TAG: ${{ github.sha }}
+    #   run: |
+    #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG ./backend
+    #     docker push $ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG
+    #     echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_BACKEND:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Build, tag, and push Pagos to ECR
-      id: build-image-pagos
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG ./pagos
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG" >> $GITHUB_OUTPUT
+    # - name: Build, tag, and push Pagos to ECR
+    #   id: build-image-pagos
+    #   env:
+    #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    #     IMAGE_TAG: ${{ github.sha }}
+    #   run: |
+    #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG ./pagos
+    #     docker push $ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG
+    #     echo "image=$ECR_REGISTRY/$ECR_REPOSITORY_PAGOS:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    - name: Fill ECS task definition (Backend)
-      id: task-def-backend
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION_BACKEND }}
-        container-name: ${{ env.CONTAINER_NAME_BACKEND }}
-        image: ${{ steps.build-image-backend.outputs.image }}
+    # - name: Fill ECS task definition (Backend)
+    #   id: task-def-backend
+    #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #   with:
+    #     task-definition: ${{ env.ECS_TASK_DEFINITION_BACKEND }}
+    #     container-name: ${{ env.CONTAINER_NAME_BACKEND }}
+    #     image: ${{ steps.build-image-backend.outputs.image }}
 
-    - name: Deploy ECS task definition (Backend)
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def-backend.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE_BACKEND }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+    # - name: Deploy ECS task definition (Backend)
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    #   with:
+    #     task-definition: ${{ steps.task-def-backend.outputs.task-definition }}
+    #     service: ${{ env.ECS_SERVICE_BACKEND }}
+    #     cluster: ${{ env.ECS_CLUSTER }}
+    #     wait-for-service-stability: true
 
-    - name: Fill ECS task definition (Pagos)
-      id: task-def-pagos
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ env.ECS_TASK_DEFINITION_PAGOS }}
-        container-name: ${{ env.CONTAINER_NAME_PAGOS }}
-        image: ${{ steps.build-image-pagos.outputs.image }}
+    # - name: Fill ECS task definition (Pagos)
+    #   id: task-def-pagos
+    #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #   with:
+    #     task-definition: ${{ env.ECS_TASK_DEFINITION_PAGOS }}
+    #     container-name: ${{ env.CONTAINER_NAME_PAGOS }}
+    #     image: ${{ steps.build-image-pagos.outputs.image }}
 
-    - name: Deploy ECS task definition (Pagos)
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def-pagos.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE_PAGOS }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+    # - name: Deploy ECS task definition (Pagos)
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    #   with:
+    #     task-definition: ${{ steps.task-def-pagos.outputs.task-definition }}
+    #     service: ${{ env.ECS_SERVICE_PAGOS }}
+    #     cluster: ${{ env.ECS_CLUSTER }}
+    #     wait-for-service-stability: true
 
     # ==========================================
     # 3. NOTIFICACIONES -> Amazon EC2 (Docker)
