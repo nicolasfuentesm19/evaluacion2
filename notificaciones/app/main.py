@@ -1,5 +1,8 @@
 import os
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -43,19 +46,25 @@ def get_sns_client():
     )
 
 def send_email(to_address: str, subject: str, body_html: str):
-    client = get_ses_client()
+    smtp_email = "nicolasfuentesm19@gmail.com"
+    smtp_password = "pswf snin ohmn vamv"
+    
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = smtp_email
+    msg["To"] = to_address
+
+    part = MIMEText(body_html, "html")
+    msg.attach(part)
+
     try:
-        response = client.send_email(
-            Destination={'ToAddresses': [to_address]},
-            Message={
-                'Body': {'Html': {'Charset': 'UTF-8', 'Data': body_html}},
-                'Subject': {'Charset': 'UTF-8', 'Data': subject},
-            },
-            Source=SENDER_EMAIL,
-        )
-        return response
-    except ClientError as e:
-        logger.error(f"Error sending email via SES: {e.response['Error']['Message']}")
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(smtp_email, smtp_password)
+            server.sendmail(smtp_email, to_address, msg.as_string())
+        return {"MessageId": "smtp-success"}
+    except Exception as e:
+        logger.error(f"Error sending email via SMTP: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/email/verify")
