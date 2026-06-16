@@ -18,6 +18,10 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Ecommerce Backend API")
 
+@app.get("/")
+def read_root():
+    return {"message": "Ecommerce Backend API is running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

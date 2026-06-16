@@ -4,6 +4,6 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class ApiService {
-  public baseUrl: string = 'http://100.58.238.106:8000'; // IP pública inyectada tras reiniciar Fargate
+  public baseUrl: string = 'http://ecommerce-backend-alb-1181827508.us-east-1.elb.amazonaws.com'; // DNS estático del ALB
   constructor() { }
 }
