@@ -419,14 +419,42 @@ async def upload_file(
     return db_file
 
 @app.get("/audit-events")
-async def get_audit_events():
-    # Gateway to the auditoria microservice
+def get_audit_events(
+    event_type: str = None,
+    user_email: str = None,
+    limit: int = 100,
+    db: Session = Depends(database.get_db)
+):
+    # Query the audit_events table directly (shared RDS with auditoria microservice)
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{AUDITORIA_URL}/events/")
-            response.raise_for_status()
-            return response.json()
+        from sqlalchemy import text
+        query = "SELECT id, timestamp, user_email, event_type, description, ip_address FROM audit_events"
+        conditions = []
+        params = {}
+        if event_type:
+            conditions.append("event_type = :event_type")
+            params["event_type"] = event_type
+        if user_email:
+            conditions.append("user_email ILIKE :user_email")
+            params["user_email"] = f"%{user_email}%"
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        query += " ORDER BY id DESC LIMIT :limit"
+        params["limit"] = limit
+        result = db.execute(text(query), params)
+        rows = result.fetchall()
+        return [
+            {
+                "id": row[0],
+                "timestamp": row[1],
+                "user_email": row[2],
+                "event_type": row[3],
+                "description": row[4],
+                "ip_address": row[5]
+            }
+            for row in rows
+        ]
     except Exception as e:
-        logging.error(f"Error fetching audit events: {e}")
-        raise HTTPException(status_code=502, detail="Error de comunicación con el servicio de auditoría")
+        logging.error(f"Error fetching audit events from DB: {e}")
+        raise HTTPException(status_code=500, detail=f"Error consultando auditoría: {str(e)}")
 
