@@ -1,0 +1,79 @@
+.auditoria-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.refresh-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.refresh-btn:hover {
+  background-color: #45a049;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.audit-table th, .audit-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.audit-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.audit-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: bold;
+  color: white;
+  background-color: #6c757d;
+}
+
+.badge.login { background-color: #28a745; }
+.badge.registro { background-color: #17a2b8; }
+.badge.error { background-color: #dc3545; }
+.badge.compra { background-color: #fd7e14; }
+.badge.pago { background-color: #ffc107; color: #212529; }
+.badge.archivo { background-color: #6610f2; }
+
+.loading, .error, .empty-state {
+  padding: 20px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.error {
+  color: #dc3545;
+  background-color: #f8d7da;
+}

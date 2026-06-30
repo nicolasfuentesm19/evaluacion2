@@ -33,8 +33,24 @@ app.add_middleware(
 PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://pagos:8002")
 
 NOTIFICACIONES_URL = os.getenv("NOTIFICACIONES_URL", "http://notificaciones:8003")
+AUDITORIA_URL = os.getenv("AUDITORIA_URL", "http://auditoria:8004")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "evaluacion2-archivos-app")
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
+async def log_audit_event(user_email: str, event_type: str, description: str, ip_address: str = None):
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{AUDITORIA_URL}/events/",
+                json={
+                    "user_email": user_email,
+                    "event_type": event_type,
+                    "description": description,
+                    "ip_address": ip_address
+                }
+            )
+    except Exception as e:
+        logging.error(f"Error logging audit event: {e}")
 
 def get_s3_client():
     return boto3.client(
@@ -81,6 +97,9 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(database.g
         logging.error(f"Error sending verification email: {e}")
         # We don't block registration if email fails, but in production we should handle this
     
+    import asyncio
+    asyncio.create_task(log_audit_event(db_user.email, "Registro", "Usuario registrado exitosamente"))
+    
     return db_user
 
 @app.post("/users/verify")
@@ -91,22 +110,30 @@ def verify_user(req: schemas.UserVerify, db: Session = Depends(database.get_db))
     if db_user.is_verified:
         return {"message": "User already verified"}
     if db_user.verification_code != req.code:
+        import asyncio
+        asyncio.create_task(log_audit_event(req.email, "Error Validación", "Intento de validación fallido por código incorrecto"))
         raise HTTPException(status_code=400, detail="Invalid verification code")
         
     db_user.is_verified = True
     db.commit()
+    import asyncio
+    asyncio.create_task(log_audit_event(req.email, "Validación", "Cuenta validada exitosamente"))
     return {"message": "User successfully verified"}
 
 @app.post("/token", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     user = auth.get_user(db, email=form_data.username)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
+        import asyncio
+        asyncio.create_task(log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesión fallido"))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_verified:
+        import asyncio
+        asyncio.create_task(log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesión de cuenta no verificada"))
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account not verified. Please check your email for the verification code.",
@@ -115,6 +142,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = auth.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
+    import asyncio
+    asyncio.create_task(log_audit_event(user.email, "Login", "Inicio de sesión exitoso"))
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me/", response_model=schemas.User)
@@ -238,6 +267,9 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
     db.commit()
     db.refresh(order)
     
+    import asyncio
+    asyncio.create_task(log_audit_event(current_user.email, "Compra", f"Orden #{order.id} creada por {total_amount}"))
+    
     return schemas.CheckoutResponse(order=order, url_pago=url_pago)
 
 class CheckoutConfirmRequest(BaseModel):
@@ -280,6 +312,9 @@ async def checkout_confirm(
             products_data = [{"title": item.product.title, "quantity": item.quantity, "price": item.product.price} for item in cart.items]
         else:
             products_data = [{"title": "Productos de E-Commerce", "quantity": 1, "price": order.total_amount}]
+
+        import asyncio
+        asyncio.create_task(log_audit_event(current_user.email, "Pago Procesado", f"Pago de la orden #{order.id} aprobado por {order.total_amount}"))
 
         try:
             async with httpx.AsyncClient() as client:
@@ -382,5 +417,20 @@ async def upload_file(
         except Exception as e:
             logging.error(f"Error sending SMS: {e}")
             
+    import asyncio
+    asyncio.create_task(log_audit_event(current_user.email, "Archivo", f"Archivo {file.filename} subido a S3"))
+            
     return db_file
+
+@app.get("/audit-events")
+async def get_audit_events():
+    # Gateway to the auditoria microservice
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{AUDITORIA_URL}/events/")
+            response.raise_for_status()
+            return response.json()
+    except Exception as e:
+        logging.error(f"Error fetching audit events: {e}")
+        raise HTTPException(status_code=502, detail="Error de comunicación con el servicio de auditoría")
 

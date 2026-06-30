@@ -5,6 +5,7 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { CartComponent } from './features/cart/cart/cart.component';
 import { FilesComponent } from './features/files/files.component';
 import { PaymentSuccessComponent } from './features/checkout/components/payment-success/payment-success.component';
+import { AuditoriaDashboardComponent } from './features/auditoria/auditoria-dashboard.component';
 
 export const routes: Routes = [
   { path: '', component: ProductListComponent },
@@ -13,5 +14,6 @@ export const routes: Routes = [
   { path: 'cart', component: CartComponent },
   { path: 'files', component: FilesComponent },
   { path: 'payment-success', component: PaymentSuccessComponent },
+  { path: 'auditoria', component: AuditoriaDashboardComponent },
   { path: '**', redirectTo: '' }
 ];
