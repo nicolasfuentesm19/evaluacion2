@@ -4,7 +4,7 @@ import random
 import string
 from datetime import datetime
 import boto3
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -87,7 +87,8 @@ def get_s3_client():
 # --- User Auth ---
 
 @app.post("/users/", response_model=schemas.User)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+async def create_user(user: schemas.UserCreate, request: Request, db: Session = Depends(database.get_db)):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     db_user = auth.get_user(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -121,38 +122,40 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(database.g
         logging.error(f"Error sending verification email: {e}")
         # We don't block registration if email fails, but in production we should handle this
     
-    log_audit_event(db_user.email, "Registro", "Usuario registrado exitosamente")
+    log_audit_event(db_user.email, "Registro", "Usuario registrado exitosamente", client_ip)
     
     return db_user
 
 @app.post("/users/verify")
-def verify_user(req: schemas.UserVerify, db: Session = Depends(database.get_db)):
+def verify_user(req: schemas.UserVerify, request: Request, db: Session = Depends(database.get_db)):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     db_user = auth.get_user(db, email=req.email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     if db_user.is_verified:
         return {"message": "User already verified"}
     if db_user.verification_code != req.code:
-        log_audit_event(req.email, "Error Validacion", "Intento de validacion fallido por codigo incorrecto")
+        log_audit_event(req.email, "Error Validacion", "Intento de validacion fallido por codigo incorrecto", client_ip)
         raise HTTPException(status_code=400, detail="Invalid verification code")
         
     db_user.is_verified = True
     db.commit()
-    log_audit_event(req.email, "Validacion", "Cuenta validada exitosamente")
+    log_audit_event(req.email, "Validacion", "Cuenta validada exitosamente", client_ip)
     return {"message": "User successfully verified"}
 
 @app.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     user = auth.get_user(db, email=form_data.username)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
-        log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesion fallido")
+        log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesion fallido", client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_verified:
-        log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesion de cuenta no verificada")
+        log_audit_event(form_data.username, "Error Login", "Intento de inicio de sesion de cuenta no verificada", client_ip)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account not verified. Please check your email for the verification code.",
@@ -161,7 +164,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = auth.create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    log_audit_event(user.email, "Login", "Inicio de sesion exitoso")
+    log_audit_event(user.email, "Login", "Inicio de sesion exitoso", client_ip)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me/", response_model=schemas.User)
@@ -237,7 +240,8 @@ def remove_from_cart(product_id: int, current_user: models.User = Depends(auth.g
 # --- Checkout / Payment Integration ---
 
 @app.post("/checkout/", response_model=schemas.CheckoutResponse)
-async def checkout(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+async def checkout(request: Request, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     cart = db.query(models.Cart).filter(models.Cart.user_id == current_user.id, models.Cart.is_active == True).first()
     if not cart or not cart.items:
         raise HTTPException(status_code=400, detail="Cart is empty")
@@ -285,7 +289,7 @@ async def checkout(current_user: models.User = Depends(auth.get_current_user), d
     db.commit()
     db.refresh(order)
     
-    log_audit_event(current_user.email, "Compra", f"Orden #{order.id} creada por {total_amount}")
+    log_audit_event(current_user.email, "Compra", f"Orden #{order.id} creada por {total_amount}", client_ip)
     
     return schemas.CheckoutResponse(order=order, url_pago=url_pago)
 
@@ -297,9 +301,11 @@ class CheckoutConfirmRequest(BaseModel):
 @app.post("/checkout/confirm")
 async def checkout_confirm(
     payload: CheckoutConfirmRequest,
+    request: Request,
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(database.get_db)
 ):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     # Find the order by preference_id (which we stored in payment_id)
     order = db.query(models.Order).filter(
         models.Order.user_id == current_user.id,
@@ -330,7 +336,7 @@ async def checkout_confirm(
         else:
             products_data = [{"title": "Productos de E-Commerce", "quantity": 1, "price": order.total_amount}]
 
-        log_audit_event(current_user.email, "Pago Procesado", f"Pago de la orden #{order.id} aprobado por {order.total_amount}")
+        log_audit_event(current_user.email, "Pago Procesado", f"Pago de la orden #{order.id} aprobado por {order.total_amount}", client_ip)
 
         try:
             async with httpx.AsyncClient() as client:
@@ -373,11 +379,13 @@ def get_user_space(current_user: models.User = Depends(auth.get_current_user), d
 
 @app.post("/files/upload", response_model=schemas.UserFile)
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...), 
     phone_number: str = Form(None), # Option for SMS
     current_user: models.User = Depends(auth.get_current_user), 
     db: Session = Depends(database.get_db)
 ):
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host)
     # Check space
     files = db.query(models.UserFile).filter(models.UserFile.user_id == current_user.id).all()
     used_bytes = sum(f.size_bytes for f in files)
@@ -433,7 +441,7 @@ async def upload_file(
         except Exception as e:
             logging.error(f"Error sending SMS: {e}")
             
-    log_audit_event(current_user.email, "Archivo", f"Archivo {file.filename} subido a S3")
+    log_audit_event(current_user.email, "Archivo", f"Archivo {file.filename} subido a S3", client_ip)
             
     return db_file
 
