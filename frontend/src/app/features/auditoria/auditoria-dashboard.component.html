@@ -1,14 +1,28 @@
 <div class="auditoria-container">
-  <h2>Dashboard de Auditoría y Monitoreo</h2>
-  <button (click)="loadEvents()" class="refresh-btn">Actualizar Eventos</button>
+  <div class="auditoria-header">
+    <h2>Dashboard de Auditoría y Monitoreo</h2>
+    <button (click)="loadEvents()" class="refresh-btn">↺ Actualizar</button>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Filtrar por tipo:</span>
+    <button class="filter-btn" [class.active]="selectedType === ''" (click)="filterByType('')">Todos</button>
+    <button
+      *ngFor="let type of eventTypes"
+      class="filter-btn"
+      [class.active]="selectedType === type"
+      (click)="filterByType(type)">
+      {{ type }}
+    </button>
+  </div>
 
   <div *ngIf="loading" class="loading">Cargando eventos...</div>
-  <div *ngIf="error" class="error">{{ error }}</div>
+  <div *ngIf="error" class="error-msg">{{ error }}</div>
 
-  <table *ngIf="!loading && events.length > 0" class="audit-table">
+  <table *ngIf="!loading && filteredEvents.length > 0" class="audit-table">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>#</th>
         <th>Fecha y Hora</th>
         <th>Usuario</th>
         <th>Tipo de Evento</th>
@@ -17,18 +31,18 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let event of events">
+      <tr *ngFor="let event of filteredEvents">
         <td>{{ event.id }}</td>
         <td>{{ event.timestamp }}</td>
         <td>{{ event.user_email }}</td>
-        <td><span class="badge {{ event.event_type | lowercase }}">{{ event.event_type }}</span></td>
+        <td><span class="badge type-{{ event.event_type | lowercase | slice:0:6 }}">{{ event.event_type }}</span></td>
         <td>{{ event.description }}</td>
         <td>{{ event.ip_address || 'N/A' }}</td>
       </tr>
     </tbody>
   </table>
 
-  <div *ngIf="!loading && events.length === 0" class="empty-state">
-    No hay eventos registrados.
+  <div *ngIf="!loading && filteredEvents.length === 0 && !error" class="empty-state">
+    No hay eventos registrados aún.
   </div>
 </div>

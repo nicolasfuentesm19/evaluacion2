@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
+import { ApiService } from './api.service';
 
 export interface AuditEvent {
   id: number;
@@ -16,10 +16,13 @@ export interface AuditEvent {
   providedIn: 'root'
 })
 export class AuditoriaService {
+  private baseUrl: string;
 
-  constructor(private http: HttpClient, private apiService: ApiService) { }
+  constructor(private http: HttpClient, private apiService: ApiService) {
+    this.baseUrl = this.apiService.baseUrl;
+  }
 
   getEvents(): Observable<AuditEvent[]> {
-    return this.http.get<AuditEvent[]>(`${this.apiService.baseUrl}/audit-events`);
+    return this.http.get<AuditEvent[]>(`${this.baseUrl}/audit-events`);
   }
 }
