@@ -1,25 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
-import { AuditoriaService, AuditEvent } from '../../../core/services/auditoria.service';
+import { HttpClient } from '@angular/common/http';
+
+export interface AuditEvent {
+  id: number;
+  timestamp: string;
+  user_email: string;
+  event_type: string;
+  description: string;
+  ip_address?: string;
+}
 
 @Component({
   selector: 'app-auditoria-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
-  providers: [AuditoriaService],
+  imports: [CommonModule],
   templateUrl: './auditoria-dashboard.component.html',
   styleUrls: ['./auditoria-dashboard.component.css']
 })
 export class AuditoriaDashboardComponent implements OnInit {
+  private http = inject(HttpClient);
+  private backendUrl = 'http://ecommerce-backend-alb-1181827508.us-east-1.elb.amazonaws.com';
+
   events: AuditEvent[] = [];
   filteredEvents: AuditEvent[] = [];
   loading = false;
   error = '';
   selectedType = '';
   eventTypes: string[] = [];
-
-  constructor(private auditoriaService: AuditoriaService) { }
 
   ngOnInit(): void {
     this.loadEvents();
@@ -28,7 +36,7 @@ export class AuditoriaDashboardComponent implements OnInit {
   loadEvents(): void {
     this.loading = true;
     this.error = '';
-    this.auditoriaService.getEvents().subscribe({
+    this.http.get<AuditEvent[]>(`${this.backendUrl}/audit-events`).subscribe({
       next: (data: AuditEvent[]) => {
         this.events = data;
         this.filteredEvents = data;
@@ -48,7 +56,7 @@ export class AuditoriaDashboardComponent implements OnInit {
     if (!type) {
       this.filteredEvents = this.events;
     } else {
-      this.filteredEvents = this.events.filter(e => e.event_type === type);
+      this.filteredEvents = this.events.filter((e: AuditEvent) => e.event_type === type);
     }
   }
 }
