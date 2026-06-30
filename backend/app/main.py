@@ -414,8 +414,7 @@ async def upload_file(
         except Exception as e:
             logging.error(f"Error sending SMS: {e}")
             
-    import asyncio
-    asyncio.create_task(log_audit_event(current_user.email, "Archivo", f"Archivo {file.filename} subido a S3"))
+    log_audit_event(current_user.email, "Archivo", f"Archivo {file.filename} subido a S3")
             
     return db_file
 
