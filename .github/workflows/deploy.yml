@@ -54,9 +54,11 @@ jobs:
         npm install
         npm run build
 
-    - name: Deploy Frontend to S3
+    - name: Deploy Frontend to S3 and Backend
       run: |
         aws s3 sync frontend/dist/frontend/browser/ s3://${{ env.S3_FRONTEND_BUCKET }} --delete
+        mkdir -p backend/static
+        cp -r frontend/dist/frontend/browser/* backend/static/
 
     # ==========================================
     # 2. BACKEND & PAGOS -> Amazon ECS (Fargate)

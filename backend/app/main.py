@@ -485,3 +485,27 @@ def get_audit_events(
         logging.error(f"Error fetching audit events from DB: {e}")
         raise HTTPException(status_code=500, detail=f"Error consultando auditoría: {str(e)}")
 
+# --- Serve Frontend SPA ---
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Check if static directory exists (it will be created by CI/CD)
+if not os.path.exists("static"):
+    os.makedirs("static")
+
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    # Ignore API paths if they somehow fall through
+    if full_path.startswith("users") or full_path.startswith("products") or full_path.startswith("cart") or full_path.startswith("checkout") or full_path.startswith("files") or full_path.startswith("audit-events") or full_path.startswith("token"):
+        raise HTTPException(status_code=404, detail="API route not found")
+        
+    static_path = os.path.join("static", full_path)
+    if os.path.isfile(static_path):
+        return FileResponse(static_path)
+    
+    # Fallback to index.html for Angular routing
+    index_path = os.path.join("static", "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path)
+        
+    return {"message": "Frontend not yet built or copied"}
