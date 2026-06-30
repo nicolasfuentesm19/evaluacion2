@@ -2,78 +2,165 @@
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
+}
+
+.auditoria-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
 }
 
 h2 {
-  color: #333;
-  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(90deg, #1a2980 0%, #26d0ce 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .refresh-btn {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 10px 24px;
+  border-radius: 50px;
   cursor: pointer;
-  margin-bottom: 20px;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .refresh-btn:hover {
-  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2rem;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #4a5568;
+  margin-right: 8px;
+}
+
+.filter-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  padding: 8px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.filter-btn:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.filter-btn.active {
+  background: #2d3748;
+  color: white;
+  border-color: #2d3748;
+  box-shadow: 0 4px 10px rgba(45, 55, 72, 0.2);
 }
 
 .audit-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background-color: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .audit-table th, .audit-table td {
-  padding: 12px 15px;
+  padding: 16px 20px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
 }
 
 .audit-table th {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
   font-weight: 600;
-  color: #333;
+  color: #475569;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-.audit-table tr:hover {
-  background-color: #f1f1f1;
+.audit-table td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.audit-table tr:last-child td {
+  border-bottom: none;
+}
+
+.audit-table tr:hover td {
+  background-color: #f8fafc;
 }
 
 .badge {
-  padding: 5px 10px;
-  border-radius: 12px;
-  font-size: 0.85em;
-  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   color: white;
-  background-color: #6c757d;
+  background-color: #64748b;
+  display: inline-block;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.badge.login { background-color: #28a745; }
-.badge.registro { background-color: #17a2b8; }
-.badge.error { background-color: #dc3545; }
-.badge.compra { background-color: #fd7e14; }
-.badge.pago { background-color: #ffc107; color: #212529; }
-.badge.archivo { background-color: #6610f2; }
+.badge.login { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.badge.registro { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); }
+.badge.error { background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); }
+.badge.compra { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); }
+.badge.pago { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; }
+.badge.archivo { background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); }
 
-.loading, .error, .empty-state {
-  padding: 20px;
+.loading, .error-msg, .empty-state {
+  padding: 40px;
   text-align: center;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  background-color: white;
+  border-radius: 16px;
   margin-top: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  font-weight: 500;
+  color: #64748b;
 }
 
-.error {
-  color: #dc3545;
-  background-color: #f8d7da;
+.error-msg {
+  color: #ef4444;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
 }
