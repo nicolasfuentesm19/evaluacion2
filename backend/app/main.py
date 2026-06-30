@@ -44,7 +44,7 @@ def log_audit_event(user_email: str, event_type: str, description: str, ip_addre
     def _send():
         try:
             with httpx.Client(timeout=3.0) as client:
-                client.post(
+                response = client.post(
                     f"{AUDITORIA_URL}/events/",
                     json={
                         "user_email": user_email,
@@ -53,8 +53,27 @@ def log_audit_event(user_email: str, event_type: str, description: str, ip_addre
                         "ip_address": ip_address
                     }
                 )
+                response.raise_for_status()
         except Exception as e:
-            logging.error(f"Error logging audit event: {e}")
+            logging.error(f"Error logging audit event via HTTP (fallback to DB): {e}")
+            try:
+                from sqlalchemy import create_engine, text
+                from datetime import datetime
+                engine = create_engine(os.getenv("DATABASE_URL"))
+                with engine.connect() as conn:
+                    conn.execute(text("""
+                        INSERT INTO audit_events (timestamp, user_email, event_type, description, ip_address)
+                        VALUES (:ts, :email, :tipo, :desc, :ip)
+                    """), {
+                        "ts": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "email": user_email,
+                        "tipo": event_type,
+                        "desc": description,
+                        "ip": ip_address or "0.0.0.0"
+                    })
+                    conn.commit()
+            except Exception as db_e:
+                logging.error(f"Error logging audit event via DB fallback: {db_e}")
     threading.Thread(target=_send, daemon=True).start()
 
 def get_s3_client():
