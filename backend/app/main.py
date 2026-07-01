@@ -114,10 +114,11 @@ async def create_user(user: schemas.UserCreate, request: Request, db: Session = 
     # Send verification email via Notificaciones service
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(
+            response = await client.post(
                 f"{NOTIFICACIONES_URL}/email/verify",
                 json={"email": db_user.email, "code": verification_code}
             )
+            logging.info(f"Notification service response: {response.status_code} - {response.text}")
     except Exception as e:
         logging.error(f"Error sending verification email: {e}")
         # We don't block registration if email fails, but in production we should handle this
@@ -259,8 +260,8 @@ async def checkout(request: Request, current_user: models.User = Depends(auth.ge
     # 2. Call Payment Microservice
     try:
         # Use S3 Frontend URL for success redirection
-        # We'll use a relative path here to let the frontend know where it is deployed, or hardcode it since it's an academic project
-        success_url = "https://evaluacion2-archivos-app.s3.amazonaws.com/index.html"
+        # We'll use the custom domain for redirection
+        success_url = "http://evaluacion4cloud.mooo.com/payment-success"
         
         payment_payload = {
             "id_usuario": current_user.id,

@@ -8,7 +8,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script>
     if (!window.location.href.includes('payment-success') && window.location.search.includes('collection_id')) {
-      window.location.href = 'http://evaluacion2-archivos-app.s3-website-us-east-1.amazonaws.com/payment-success' + window.location.search;
+      window.location.href = window.location.origin + '/payment-success' + window.location.search;
     }
   </script>
 </head>
