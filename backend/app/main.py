@@ -18,7 +18,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Ecommerce Backend API")
 
-@app.get("/")
+@app.get("/api/health")
 def read_root():
     return {"message": "Ecommerce Backend API is running"}
 
