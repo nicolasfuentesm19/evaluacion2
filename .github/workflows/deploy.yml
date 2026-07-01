@@ -167,11 +167,12 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_REGION: ${{ env.AWS_REGION }}
+        SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
+        envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION,SMTP_PASSWORD
         script: |
           export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
           export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
@@ -180,4 +181,4 @@ jobs:
           docker pull ${{ steps.build-image-notificaciones.outputs.image }}
           docker stop notificaciones-service || true
           docker rm notificaciones-service || true
-          docker run -d --name notificaciones-service --env-file /home/${{ secrets.EC2_USERNAME }}/.env -p 8003:8003 ${{ steps.build-image-notificaciones.outputs.image }}
+          docker run -d --name notificaciones-service --env-file /home/${{ secrets.EC2_USERNAME }}/.env -e SMTP_PASSWORD=$SMTP_PASSWORD -p 8003:8003 ${{ steps.build-image-notificaciones.outputs.image }}
