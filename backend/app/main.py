@@ -260,8 +260,8 @@ async def checkout(request: Request, current_user: models.User = Depends(auth.ge
     # 2. Call Payment Microservice
     try:
         # Use S3 Frontend URL for success redirection
-        # We'll use the custom domain for redirection
-        success_url = "http://evaluacion4cloud.mooo.com/payment-success"
+        # We MUST use the HTTPS S3 URL here because MercadoPago rejects HTTP urls for back_urls
+        success_url = "https://evaluacion2-archivos-app.s3.amazonaws.com/index.html"
         
         payment_payload = {
             "id_usuario": current_user.id,
