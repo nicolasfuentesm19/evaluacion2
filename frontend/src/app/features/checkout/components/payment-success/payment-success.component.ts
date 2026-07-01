@@ -26,11 +26,11 @@ export class PaymentSuccessComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      const preferenceId = params['preference_id'];
+      const preferenceId = params['preference_id'] || '';
       const collectionId = params['collection_id'];
       const status = params['status'];
 
-      if (!preferenceId || !collectionId || status !== 'approved') {
+      if (!collectionId || status !== 'approved') {
         this.status = 'error';
         this.message = 'No se pudo confirmar el pago o el pago no fue aprobado.';
         return;

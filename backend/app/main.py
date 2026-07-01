@@ -307,14 +307,20 @@ async def checkout_confirm(
     db: Session = Depends(database.get_db)
 ):
     client_ip = request.headers.get("X-Forwarded-For", request.client.host)
-    # Find the order by preference_id (which we stored in payment_id)
-    order = db.query(models.Order).filter(
-        models.Order.user_id == current_user.id,
-        models.Order.payment_id == payload.preference_id
-    ).first()
+    if payload.preference_id:
+        order = db.query(models.Order).filter(
+            models.Order.user_id == current_user.id,
+            models.Order.payment_id == payload.preference_id
+        ).first()
+    else:
+        # Fallback to the latest pending order if preference_id is missing
+        order = db.query(models.Order).filter(
+            models.Order.user_id == current_user.id,
+            models.Order.status == 'pending'
+        ).order_by(models.Order.id.desc()).first()
     
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found for this preference_id")
+        raise HTTPException(status_code=404, detail="Order not found for confirmation")
         
     if payload.status == "approved" and order.status != "paid":
         order.status = "paid"
