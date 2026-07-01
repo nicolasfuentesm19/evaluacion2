@@ -46,26 +46,30 @@ def get_sns_client():
     )
 
 def send_email(to_address: str, subject: str, body_html: str):
-    smtp_email = "nicolasfuentesm19@gmail.com"
-    smtp_password = "pswf snin ohmn vamv"
-    
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = smtp_email
-    msg["To"] = to_address
-
-    part = MIMEText(body_html, "html")
-    msg.attach(part)
-
+    ses_client = get_ses_client()
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(smtp_email, smtp_password)
-            server.sendmail(smtp_email, to_address, msg.as_string())
-        return {"MessageId": "smtp-success"}
-    except Exception as e:
-        logger.error(f"Error sending email via SMTP: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        response = ses_client.send_email(
+            Source=SENDER_EMAIL,
+            Destination={
+                'ToAddresses': [to_address]
+            },
+            Message={
+                'Subject': {
+                    'Data': subject,
+                    'Charset': 'UTF-8'
+                },
+                'Body': {
+                    'Html': {
+                        'Data': body_html,
+                        'Charset': 'UTF-8'
+                    }
+                }
+            }
+        )
+        return {"MessageId": response['MessageId']}
+    except ClientError as e:
+        logger.error(f"Error sending email via SES: {e.response['Error']['Message']}")
+        raise HTTPException(status_code=500, detail=str(e.response['Error']['Message']))
 
 @app.post("/email/verify")
 def send_verification_email(req: EmailVerifyRequest):
